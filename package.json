@@ -18,9 +18,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "domecs": "file:../domecs/packages/domecs",
-    "domecs-dom": "file:../domecs/packages/domecs-dom",
-    "domecs-input": "file:../domecs/packages/domecs-input"
+    "@domecs/core": "file:../domecs/packages/domecs",
+    "@domecs/dom": "file:../domecs/packages/domecs-dom",
+    "@domecs/input": "file:../domecs/packages/domecs-input"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

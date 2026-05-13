@@ -8,7 +8,7 @@ import {
   defineEvent,
   entry,
   type World,
-} from 'domecs'
+} from '@domecs/core'
 import {
   AlarmState,
   ChartSeries,

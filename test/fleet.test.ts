@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { And, Has, Where } from 'domecs'
+import { And, Has, Where } from '@domecs/core'
 import {
   AlarmState,
   DashboardStats,

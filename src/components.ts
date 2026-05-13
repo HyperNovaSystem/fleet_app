@@ -1,4 +1,4 @@
-import { defineComponent } from 'domecs'
+import { defineComponent } from '@domecs/core'
 
 export type VehicleType = 'van' | 'truck' | 'bike' | 'service' | 'responder'
 export type VehicleStatus = 'moving' | 'idle' | 'charging' | 'maintenance' | 'offline'
