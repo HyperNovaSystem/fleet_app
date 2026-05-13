@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fleet Pulse</title>
+  </head>
+  <body>
+    <header>
+      <div>
+        <p class="eyebrow">DOMECS exemplar #5</p>
+        <h1>Fleet Pulse</h1>
+        <p class="dek">External telemetry drives a coalesced operations dashboard for 400 vehicles and 100 infrastructure assets.</p>
+      </div>
+      <div class="controls">
+        <button id="burst">Inject 500 updates</button>
+        <button data-sort="speed">Sort speed</button>
+        <button data-sort="battery">Sort battery</button>
+        <button data-scroll="-10">Rows ↑</button>
+        <button data-scroll="10">Rows ↓</button>
+      </div>
+    </header>
+    <main>
+      <aside class="panel"><h2>Pulse</h2><div id="stats"></div><div id="alarms"></div></aside>
+      <section class="viewport"><div id="map"></div><div id="chart"></div><div id="chrome"></div></section>
+      <aside class="panel"><h2>Fleet table</h2><div id="table"></div><div id="detail"></div></aside>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
