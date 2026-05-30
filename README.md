@@ -1,5 +1,7 @@
 # Fleet Pulse
 
+**▶ Live demo: https://hypernovasystem.github.io/fleet/**
+
 DOMECS exemplar #5: an operations dashboard for a 400-vehicle fleet with a noisy WebSocket-style telemetry feed.
 
 ## Spec slice
