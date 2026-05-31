@@ -33,8 +33,9 @@ curl -s localhost:5199/ | grep -i '<title>'   # expect: Fleet Pulse
 
 ## Manual / Playwright smoke process
 
-This is the process used to validate a running build. Record results in
-`doc/FINDINGS_fleet.md` and upsert Reqall issues (see below).
+This is the process used to validate a running build. Record app-level results in
+this repo's `FINDINGS.md` (engine issues in `../domecs/doc/FINDINGS_fleet.md`) and
+upsert Reqall issues (see below).
 
 1. Start dev server on a verified free port; confirm `<title>` is `Fleet Pulse`.
 2. `browser_navigate` to it; check `browser_console_messages` (favicon 404 is the
@@ -58,8 +59,21 @@ This is the process used to validate a running build. Record results in
 - **#2739 (LOW, fleet-specific)** — chart bars show debug index labels;
   `/favicon.ico` 404; map pins overlap and intercept clicks; fragile dev port.
 
-Findings split: fleet-specific items live here (`doc/FINDINGS_fleet.md`);
-engine/`@domecs/*` items live in `../domecs/FINDINGS.md`.
+## Recording findings
+
+Record every deficiency where the fault actually lives:
+
+- **This app's own deficiencies** — bugs, missing features, UX/DX gaps in *this*
+  codebase → **`FINDINGS.md`** at the root of this repo.
+- **DOMECS engine deficiencies** — anything wrong with or missing from `@domecs/*`
+  (API, DX, docs, performance, or an engine/renderer bug surfaced here) →
+  **`../domecs/doc/FINDINGS_fleet.md`** in the engine repo. One file per app, so
+  engine maintainers triage all app-surfaced findings together; the curated
+  cross-app synthesis in `../domecs/FINDINGS.md` draws from these (e.g. the #2738
+  ghost-row root cause is consolidated there as **O-16**).
+
+When in doubt, fix-location decides: if the fix would land in `@domecs/*`, it is
+an engine finding.
 
 ## Conventions (inherited)
 
