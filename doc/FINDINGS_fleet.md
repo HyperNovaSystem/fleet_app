@@ -17,32 +17,35 @@ Tracked in Reqall (project `HyperNovaSystem/fleet`): issues **#2738** (high), **
 
 ## Deficiencies
 
+> **Scope split.** The ghost-row defect roots in the `@domecs/dom` engine, not in
+> fleet_app — it is recorded in the engine findings:
+> `../domecs/FINDINGS.md` → **O-16** (sharpens O-5/O-6). Below is only the
+> fleet-side trigger + mitigation. Everything else here is fleet-specific.
+
 ### HIGH — Ghost/duplicate table rows after sort or scroll (Reqall #2738)
 
-After **Inject 500 updates** then **Sort speed** (or **Rows ↓**), the fleet table
-renders ~58 rows instead of 50: ~8 stale rows from the previous ordering are
-prepended with their OLD rank indices (e.g. `3,4,17,18,27,28,41,42` —
-BIKE-013/018/083/088/133/138/203/208) above a fresh, correctly-ranked 1..50 list.
+**Symptom (fleet):** after **Inject 500 updates** then **Sort speed** (or
+**Rows ↓**), the fleet table renders ~58 rows instead of 50: ~8 stale rows from the
+previous ordering are prepended with their OLD rank indices (e.g.
+`3,4,17,18,27,28,41,42` — BIKE-013/018/083/088/133/138/203/208) above a fresh,
+correctly-ranked 1..50 list.
 
-**Root cause — DOM view, not the projection.**
-`sim.ts` `rebuildTableRows()` (~L369-382) removes ALL `TableRow` components then
-re-adds exactly `size` for the new window, and `DashboardStats.renderedTableRows`
-reports 50 — ECS state is correct. The defect is in the DOM view layer:
-`main.ts` `rowView = defineView({ slot:'table', query: Has(TableRow), ... })`.
-Entities that drop OUT of the window have `TableRow` removed only (no re-add); the
-view fails to delete their `<button class="row">` nodes for that remove-only case,
-while entities retained across the rebuild coalesce remove+add and survive.
+**This is an engine bug, surfaced by a fleet pattern.** `sim.ts`
+`rebuildTableRows()` (~L369-382) removes ALL `TableRow` components then re-adds
+exactly `size` for the new window; ECS state is correct
+(`DashboardStats.renderedTableRows` = 50). The orphaned DOM nodes come from the
+`@domecs/dom` view reconciliation under a same-tick remove-all/re-add churn — see
+`../domecs/FINDINGS.md` O-16 for the engine root-cause analysis.
 
-**Fix direction:** either `@domecs/dom` view exit/removal handling for a queried
-component removed (esp. churned remove+add in one tick), or change the projection
-to update `TableRow` in place instead of remove-all/re-add so the view never sees
-a mass exit.
+**Fleet-side mitigation (until O-16 lands):** change the projection to update
+`TableRow` **in place** (keyed by entity) instead of remove-all/re-add, so the view
+never sees a mass component exit. Keep `rowView` as-is.
 
 **Test gap:** the existing suite is ECS-level and passes; it never exercises DOM
 reconciliation, so this regression is uncaught. Add a jsdom/Playwright test that
 asserts exactly `tableWindowSize` row elements after a sort/scroll.
 
-### LOW — cosmetic / usability (Reqall #2739)
+### LOW — cosmetic / usability (Reqall #2739, all fleet-specific)
 
 1. **Chart debug labels.** `paintChart()` (`main.ts` ~L157) renders each bar as
    `<span ...>${i}</span>`, printing the index `0,1,2,…` as visible text in every

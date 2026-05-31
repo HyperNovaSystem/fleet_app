@@ -49,13 +49,17 @@ This is the process used to validate a running build. Record results in
 
 ## Known issues (Reqall project `HyperNovaSystem/fleet`)
 
-- **#2738 (HIGH)** — ghost/duplicate table rows persist after sort/scroll. ECS state
-  is correct (exactly 50 `TableRow`); the DOM view leaves orphaned `<button.row>`
-  nodes for entities removed-only from the window. Tests are ECS-level and miss it.
-- **#2739 (LOW)** — chart bars show debug index labels; `/favicon.ico` 404; map pins
-  overlap and intercept clicks; fragile dev port.
+- **#2738 (HIGH)** — ghost/duplicate table rows after sort/scroll. ECS state is
+  correct (exactly 50 `TableRow`); root cause is an **`@domecs/dom` engine** bug
+  (orphaned DOM nodes under same-tick remove-all/re-add) — recorded engine-side in
+  `../domecs/FINDINGS.md` **O-16**. Fleet-side mitigation: update `TableRow` in
+  place instead of remove-all/re-add in `sim.ts rebuildTableRows`. Tests are
+  ECS-level and miss it.
+- **#2739 (LOW, fleet-specific)** — chart bars show debug index labels;
+  `/favicon.ico` 404; map pins overlap and intercept clicks; fragile dev port.
 
-Full detail: `doc/FINDINGS_fleet.md`.
+Findings split: fleet-specific items live here (`doc/FINDINGS_fleet.md`);
+engine/`@domecs/*` items live in `../domecs/FINDINGS.md`.
 
 ## Conventions (inherited)
 
