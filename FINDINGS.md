@@ -22,28 +22,36 @@ Tracked in Reqall (project `HyperNovaSystem/fleet`): issues **#2738** (high), **
 > `../domecs/FINDINGS.md` → **O-16** (sharpens O-5/O-6). Below is only the
 > fleet-side trigger + mitigation. Everything else here is fleet-specific.
 
-### HIGH — Ghost/duplicate table rows after sort or scroll (Reqall #2738)
+### HIGH — Ghost/duplicate table rows after sort or scroll (Reqall #2738) — MITIGATED
+
+**Status:** Fixed fleet-side 2026-05-31 (in-place `TableRow` update). Engine root
+cause O-16 remains open in `../domecs/`.
 
 **Symptom (fleet):** after **Inject 500 updates** then **Sort speed** (or
-**Rows ↓**), the fleet table renders ~58 rows instead of 50: ~8 stale rows from the
-previous ordering are prepended with their OLD rank indices (e.g.
-`3,4,17,18,27,28,41,42` — BIKE-013/018/083/088/133/138/203/208) above a fresh,
-correctly-ranked 1..50 list.
+**Rows ↓**), the fleet table retained ~8 stale rows from the previous ordering,
+carrying their OLD rank indices (e.g. `3,4,17,18,27,28,41,42` —
+BIKE-013/018/083/088/133/138/203/208) — visible as duplicate ranks in the rendered
+1..50 list, while ECS state was correct (`DashboardStats.renderedTableRows` = 50).
 
 **This is an engine bug, surfaced by a fleet pattern.** `sim.ts`
-`rebuildTableRows()` (~L369-382) removes ALL `TableRow` components then re-adds
-exactly `size` for the new window; ECS state is correct
-(`DashboardStats.renderedTableRows` = 50). The orphaned DOM nodes come from the
-`@domecs/dom` view reconciliation under a same-tick remove-all/re-add churn — see
-`../domecs/FINDINGS.md` O-16 for the engine root-cause analysis.
+`rebuildTableRows()` previously removed ALL `TableRow` components then re-added
+exactly `size` for the new window. The orphaned DOM nodes come from `@domecs/dom`
+view reconciliation under a same-tick remove-all/re-add churn — see
+`../domecs/doc/FINDINGS_fleet.md` / `../domecs/FINDINGS.md` O-16 for the engine
+root-cause analysis. The defect is render-scheduling sensitive: it surfaces under
+the rAF `startLoop`, and reproduces deterministically in jsdom when the rendered
+ranks (not just the row count) are inspected.
 
-**Fleet-side mitigation (until O-16 lands):** change the projection to update
-`TableRow` **in place** (keyed by entity) instead of remove-all/re-add, so the view
-never sees a mass component exit. Keep `rowView` as-is.
+**Fleet-side mitigation (landed):** `rebuildTableRows()` now updates `TableRow`
+**in place** keyed by entity — only entities leaving the window are removed and
+only entities entering are added, so the view never sees a mass component exit.
+`rowView` is unchanged.
 
-**Test gap:** the existing suite is ECS-level and passes; it never exercises DOM
-reconciliation, so this regression is uncaught. Add a jsdom/Playwright test that
-asserts exactly `tableWindowSize` row elements after a sort/scroll.
+**Regression test:** `test/fleet.dom.test.ts` (jsdom) mounts the real `rowView`
+(+`pinView`) via `mountDOM`, runs inject→sort and inject→sort→scroll, and asserts
+the rendered table shows exactly `tableWindowSize` rows ranked `1..N` with no
+duplicate/ghost ranks. It failed before the fix (`[1,2,3,3,4,4,…]`) and passes
+after. The original ECS-level suite never painted the slot, so it missed this.
 
 ### LOW — cosmetic / usability (Reqall #2739, all fleet-specific)
 

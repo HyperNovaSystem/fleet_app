@@ -367,25 +367,51 @@ export function createFleetPulse(options: FleetPulseOptions = {}): FleetPulseRef
   }
 
   function rebuildTableRows(): void {
-    const rowIds = world.query(Has(TableRow)).entities.map((e) => e.id)
-    for (const id of rowIds) world.removeComponent(id, TableRow)
+    const current = world.query(Has(TableRow)).entities.map((e) => e.id)
 
     const viewport = world.getComponent(dashboardId, TableViewport)
-    if (!viewport) return
+    if (!viewport) {
+      for (const id of current) world.removeComponent(id, TableRow)
+      return
+    }
     const ranked = sortedVehicleIds().slice(viewport.offset, viewport.offset + viewport.size)
+    const next = new Set(ranked)
+
+    // #2738 mitigation: update TableRow in place (keyed by entity) instead of a
+    // same-tick remove-all/re-add. Only entities leaving the window are removed
+    // and only entities entering are added, so the @domecs/dom view never sees
+    // a mass component exit — which triggers engine reconciliation bug O-16
+    // (orphaned/ghost rows with stale ranks). Survivors keep their element and
+    // are repainted via the view's update().
+    for (const id of current) {
+      if (!next.has(id)) world.removeComponent(id, TableRow)
+    }
+
     ranked.forEach((id, index) => {
       const vehicle = world.getComponent(id, Vehicle)
       const telemetry = world.getComponent(id, Telemetry)
       const alarm = world.getComponent(id, AlarmState)
       if (!vehicle || !telemetry || !alarm) return
-      world.addComponent(id, TableRow, TableRow.create({
-        rank: viewport.offset + index + 1,
-        label: vehicle.callsign,
-        speed: telemetry.speed,
-        battery: telemetry.battery,
-        status: vehicle.status,
-        alarmLevel: alarm.level,
-      }))
+      const rank = viewport.offset + index + 1
+      const existing = world.getComponent(id, TableRow)
+      if (existing) {
+        existing.rank = rank
+        existing.label = vehicle.callsign
+        existing.speed = telemetry.speed
+        existing.battery = telemetry.battery
+        existing.status = vehicle.status
+        existing.alarmLevel = alarm.level
+        world.markChanged(id, TableRow)
+      } else {
+        world.addComponent(id, TableRow, TableRow.create({
+          rank,
+          label: vehicle.callsign,
+          speed: telemetry.speed,
+          battery: telemetry.battery,
+          status: vehicle.status,
+          alarmLevel: alarm.level,
+        }))
+      }
     })
   }
 
