@@ -1,6 +1,6 @@
 import {
   And,
-  Changed,
+  OnChanged,
   Has,
   Or,
   Where,
@@ -201,7 +201,7 @@ export function createFleetPulse(options: FleetPulseOptions = {}): FleetPulseRef
 
   world.system(
     'project-dashboard',
-    { schedule: 'reactive', reactsTo: Or(Changed(Telemetry), Changed(TableViewport), Changed(AlarmState), Changed(DashboardStats)), priority: 100 },
+    { schedule: 'reactive', reactsTo: Or(OnChanged(Telemetry), OnChanged(TableViewport), OnChanged(AlarmState), OnChanged(DashboardStats)), priority: 100 },
     () => rebuildProjection(true),
   )
 

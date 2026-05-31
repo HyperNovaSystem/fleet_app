@@ -33,7 +33,7 @@ world.use(createInputPlugin({ preventDefaultKeys: true }))
 const pinView = defineView({
   slot: 'map',
   query: Has(MapPin),
-  changedOn: [MapPin, Telemetry, AlarmState],
+  changedOn: { mode: 'explicit', types: [MapPin, Telemetry, AlarmState] },
   create(e) {
     const el = document.createElement('button')
     el.className = 'pin'
@@ -49,7 +49,7 @@ const pinView = defineView({
 const rowView = defineView({
   slot: 'table',
   query: Has(TableRow),
-  changedOn: [TableRow, Telemetry, AlarmState, Vehicle],
+  changedOn: { mode: 'explicit', types: [TableRow, Telemetry, AlarmState, Vehicle] },
   create(e) {
     const el = document.createElement('button')
     el.className = 'row'
@@ -60,7 +60,10 @@ const rowView = defineView({
   update(el, e) { paintRow(el as HTMLButtonElement, e) },
 })
 
-mountDOM(world, { slots: { map, table }, views: [pinView, rowView] })
+const mountResult = mountDOM(world, { slots: { map, table }, views: [pinView, rowView] })
+if (!mountResult.ok) {
+  throw new Error(`fleet_app: mountDOM failed (${mountResult.error.kind})`)
+}
 
 burstButton.addEventListener('click', () => {
   refs.injectBatch(makeTelemetryBurst(refs, 500))
@@ -100,7 +103,7 @@ paintStats()
 paintChart()
 paintDetail()
 paintChrome()
-world.start({ dtClampMs: 100 })
+world.startLoop({ dtClampMs: 100 })
 
 function paintPin(el: HTMLButtonElement, e: EntityView): void {
   const pin = world.getComponent(e.id, MapPin)
